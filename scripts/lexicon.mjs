@@ -71,3 +71,13 @@ export function chooseSigns(listed, preferred, max) {
   }
   return chosen.slice(0, max);
 }
+
+/**
+ * Hittar tecknet för ett ord bland sökträffarna: den första träffen vars uppslagsord
+ * eller synonym är exakt ordet. Sökningen ger även delträffar ("hundvalp" för "hund").
+ */
+export function findExactMatch(listed, word) {
+  const wanted = key(word.trim());
+  return listed.find((s) => [s.word, ...(s.synonyms ?? [])].some((w) => key(w) === wanted)) ?? null;
+}
+

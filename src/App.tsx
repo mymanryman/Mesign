@@ -4,6 +4,7 @@ import { About } from './pages/About';
 import { Browse } from './pages/Browse';
 import { Home } from './pages/Home';
 import { Practice } from './pages/Practice';
+import { WordLists } from './pages/WordLists';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/ova/teckna" element={<Practice mode="produce" />} />
           <Route path="/ova/tolka" element={<Practice mode="recognize" />} />
           <Route path="/om" element={<About />} />
+          <Route path="/ordlistor" element={<WordLists />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

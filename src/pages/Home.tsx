@@ -29,6 +29,9 @@ export function Home() {
                   {settings.topicIds.length === 0 ? 'Inget ämne valt: du övar på alla ' : 'Du övar på '}
                   {available} tecken.
                 </p>
+                <Link to="/ordlistor" className="mt-2 block rounded-xl border border-dashed border-slate-300 p-3 text-center text-sm font-medium text-brand-700 dark:border-slate-700 dark:text-brand-500">
+                  + Mina ordlistor: lägg till egna ord
+                </Link>
               </section>
 
               <section>

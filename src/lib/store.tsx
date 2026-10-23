@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Catalog, Mode } from './types';
 import { grade, loadProgress, saveProgress, type Grade, type ProgressMap } from './progress';
 import { loadSettings, saveSettings, type Settings } from './settings';
+import { visibleCatalog } from './wordlists';
 
 type CatalogState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; catalog: Catalog };
 
@@ -12,7 +13,20 @@ type Store = {
   progress: ProgressMap;
   record: (signId: string, result: Grade, mode: Mode) => void;
   resetProgress: () => void;
+  /** Inloggad användare. Sparas lokalt så att egna ordlistor visas utan att Firebase behöver laddas. */
+  uid: string | null;
+  setUid: (uid: string | null) => void;
 };
+
+const UID_KEY = 'mesign.uid';
+
+function loadUid(): string | null {
+  try {
+    return localStorage.getItem(UID_KEY);
+  } catch {
+    return null;
+  }
+}
 
 const StoreContext = createContext<Store | null>(null);
 
@@ -20,6 +34,7 @@ export function StoreProvider({ children, catalogUrl = '/data/catalog.json' }: {
   const [catalog, setCatalog] = useState<CatalogState>({ status: 'loading' });
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [progress, setProgress] = useState<ProgressMap>(loadProgress);
+  const [uid, setUidState] = useState<string | null>(loadUid);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,9 +71,24 @@ export function StoreProvider({ children, catalogUrl = '/data/catalog.json' }: {
     setProgress({});
   }, []);
 
+  const setUid = useCallback((next: string | null) => {
+    try {
+      if (next) localStorage.setItem(UID_KEY, next);
+      else localStorage.removeItem(UID_KEY);
+    } catch {
+      // Ignoreras, se saveProgress.
+    }
+    setUidState(next);
+  }, []);
+
+  const visible = useMemo<CatalogState>(
+    () => (catalog.status === 'ready' ? { status: 'ready', catalog: visibleCatalog(catalog.catalog, uid) } : catalog),
+    [catalog, uid],
+  );
+
   const value = useMemo(
-    () => ({ catalog, settings, updateSettings, progress, record, resetProgress }),
-    [catalog, settings, updateSettings, progress, record, resetProgress],
+    () => ({ catalog: visible, settings, updateSettings, progress, record, resetProgress, uid, setUid }),
+    [visible, settings, updateSettings, progress, record, resetProgress, uid, setUid],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

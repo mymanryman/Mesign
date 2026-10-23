@@ -1,53 +1,19 @@
 #!/usr/bin/env node
-// Hämtar tecken från Svenskt teckenspråkslexikon och skriver public/data/catalog.json
-// samt videor och stillbilder till public/media/signs/.
+// Hämtar de fasta ämnena från Svenskt teckenspråkslexikon och skriver .import-cache/base-catalog.json
+// samt videor och stillbilder till public/media/signs/. Kör sedan import-wordlists, som lägger till
+// egna ordlistor och skriver public/data/catalog.json.
 //
 // Materialet är licensierat CC BY-NC-SA 4.0. Skriptet hämtar bara de ämnen som står i
 // scripts/topics.json, väntar mellan anropen och hoppar över filer som redan finns.
 //
 // Kör: npm run import-signs
 
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { LEXICON_ORIGIN, chooseSigns, parseCategoryPage, parseSignPage } from './lexicon.mjs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { baseCatalogPath, cacheDir, fetchSign, fetchText, root } from './fetching.mjs';
+import { LEXICON_ORIGIN, chooseSigns, parseCategoryPage } from './lexicon.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const mediaDir = join(root, 'public/media/signs');
-const dataDir = join(root, 'public/data');
-const DELAY_MS = 250;
 const MAX_PAGES = 40;
-const HEADERS = { 'User-Agent': 'Mesign/0.1 (icke-kommersiell träningsapp; https://github.com/mymanryman/Mesign)' };
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function fetchText(url) {
-  for (let attempt = 1; ; attempt++) {
-    const res = await fetch(url, { headers: HEADERS });
-    if (res.ok) {
-      await sleep(DELAY_MS);
-      return res.text();
-    }
-    if (attempt >= 3) throw new Error(`${res.status} för ${url}`);
-    await sleep(1000 * attempt);
-  }
-}
-
-async function exists(path) {
-  try {
-    return (await stat(path)).size > 0;
-  } catch {
-    return false;
-  }
-}
-
-async function download(url, path) {
-  if (await exists(path)) return;
-  const res = await fetch(url, { headers: HEADERS });
-  if (!res.ok) throw new Error(`${res.status} för ${url}`);
-  await writeFile(path, Buffer.from(await res.arrayBuffer()));
-  await sleep(DELAY_MS);
-}
 
 async function listCategory(category) {
   const all = [];
@@ -67,8 +33,7 @@ async function listCategory(category) {
 
 async function main() {
   const config = JSON.parse(await readFile(join(root, 'scripts/topics.json'), 'utf8'));
-  await mkdir(mediaDir, { recursive: true });
-  await mkdir(dataDir, { recursive: true });
+  await mkdir(cacheDir, { recursive: true });
 
   const signs = new Map();
   const topics = [];
@@ -80,32 +45,14 @@ async function main() {
     console.log(`${topic.name}: ${listed.length} i lexikonet, ${chosen.length} valda${missing.length ? ` (saknas: ${missing.join(', ')})` : ''}`);
     topics.push({ id: topic.id, name: topic.name, order });
 
-    for (const { id, word, synonyms } of chosen) {
-      const existing = signs.get(id);
+    for (const entry of chosen) {
+      const existing = signs.get(entry.id);
       if (existing) {
         existing.topicIds.push(topic.id);
         continue;
       }
-      const sourceUrl = `${LEXICON_ORIGIN}/ord/${id}`;
-      const media = parseSignPage(await fetchText(sourceUrl));
-      if (!media.video) {
-        console.warn(`  Ingen video för ${word} (${sourceUrl}), hoppar över`);
-        continue;
-      }
-      await download(media.video, join(mediaDir, `${id}.mp4`));
-      let poster;
-      if (media.poster) {
-        await download(media.poster, join(mediaDir, `${id}.jpg`));
-        poster = `/media/signs/${id}.jpg`;
-      }
-      signs.set(id, {
-        id,
-        word,
-        synonyms,
-        topicIds: [topic.id],
-        media: { video: `/media/signs/${id}.mp4`, ...(poster ? { poster } : {}) },
-        sourceUrl,
-      });
+      const sign = await fetchSign(entry, [topic.id]);
+      if (sign) signs.set(entry.id, sign);
     }
   }
 
@@ -120,7 +67,7 @@ async function main() {
     topics,
     signs: [...signs.values()],
   };
-  await writeFile(join(dataDir, 'catalog.json'), JSON.stringify(catalog, null, 2) + '\n');
+  await writeFile(baseCatalogPath, JSON.stringify(catalog, null, 2) + '\n');
   console.log(`Klart: ${catalog.signs.length} tecken i ${topics.length} ämnen.`);
 }
 
