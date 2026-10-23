@@ -4,7 +4,11 @@ on:
   pull_request:
   push:
     branches: [main]
-  # Startas med "Run workflow" när nya ordlistor har sparats i appen.
+  # Letar varje timme efter ordlistor som väntar på tecken. Bygget körs bara om det finns några.
+  # Ändra även UPDATE_INTERVAL_TEXT i src/lib/wordlists.ts om schemat ändras.
+  schedule:
+    - cron: '17 * * * *'
+  # Kan också startas för hand med "Run workflow".
   workflow_dispatch:
 
 permissions:
@@ -14,10 +18,34 @@ permissions:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  # En schemalagd koll får inte avbryta en pågående deploy till produktion.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Snabb koll vid schemalagda körningar, så att gratisminuterna bara går åt när något väntar.
+  check:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      pending: ${{ steps.check.outputs.pending }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - id: check
+        run: echo "pending=$(node scripts/has-pending-wordlists.mjs)" >> "$GITHUB_OUTPUT"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MESIGN_E00EB }}
+
   build:
+    needs: check
+    if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.check.outputs.pending == 'true') }}
     runs-on: ubuntu-latest
     env:
       HAS_FIREBASE_SECRET: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MESIGN_E00EB != '' }}

@@ -3,7 +3,7 @@ import type { User } from 'firebase/auth';
 import { Layout, Notice } from '../components/Layout';
 import { deleteWordList, onUserChanged, saveWordList, signIn, signOut, watchWordLists } from '../lib/firebase';
 import { useStore } from '../lib/store';
-import { MAX_NAME_LENGTH, MAX_WORDS, parseWordList, topicIdForList, UPDATE_URL, type WordList } from '../lib/wordlists';
+import { MAX_NAME_LENGTH, MAX_WORDS, parseWordList, topicIdForList, UPDATE_INTERVAL_TEXT, type WordList } from '../lib/wordlists';
 
 type AuthState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; user: User | null };
 
@@ -91,10 +91,7 @@ function SignedIn({ user }: { user: User }) {
           <p className="font-medium">
             {pending.length === 1 ? '1 lista väntar' : `${pending.length} listor väntar`} på att tecknen hämtas.
           </p>
-          <p className="text-sm">Tryck på Uppdatera nu och sedan på Run workflow i GitHub. Tecknen finns i appen efter 3–8 minuter.</p>
-          <a href={UPDATE_URL} target="_blank" rel="noreferrer" className="block rounded-xl bg-amber-600 py-3 text-center font-semibold text-white">
-            Uppdatera nu
-          </a>
+          <p className="text-sm">Mesign hämtar tecknen automatiskt {UPDATE_INTERVAL_TEXT}. Du kan stänga appen så länge.</p>
         </div>
       )}
 
@@ -117,7 +114,7 @@ function SignedIn({ user }: { user: User }) {
                   <p className="font-medium">{list.name}</p>
                   <p className="text-sm text-slate-500">
                     {list.words.length} ord ·{' '}
-                    {list.status === 'pending' ? 'väntar på uppdatering' : `${list.signCount ?? 0} tecken hittades`}
+                    {list.status === 'pending' ? 'väntar på tecken' : `${list.signCount ?? 0} tecken hittades`}
                   </p>
                 </div>
                 <div className="flex gap-3 text-sm">
