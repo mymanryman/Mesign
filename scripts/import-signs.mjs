@@ -49,11 +49,24 @@ async function download(url, path) {
   await sleep(DELAY_MS);
 }
 
+const pageHtml = new Map();
+
+/** Visar var ett saknat ord står i kategorins HTML, så att tolkningen kan felsökas. */
+function showContext(category, word) {
+  for (const html of pageHtml.get(category) ?? []) {
+    const at = html.indexOf(`>${word}`);
+    if (at >= 0) return html.slice(Math.max(0, at - 400), at + 200).replace(/\s+/g, ' ');
+  }
+  return null;
+}
+
 async function listCategory(category) {
   const all = [];
+  pageHtml.set(category, []);
   const seen = new Set();
   for (let page = 1; page <= MAX_PAGES; page++) {
     const html = await fetchText(`${LEXICON_ORIGIN}/kategori/${category}?page=${page}`);
+    pageHtml.get(category).push(html);
     const fresh = parseCategoryPage(html).filter((s) => !seen.has(s.id));
     if (fresh.length === 0) {
       if (page === 1) throw new Error(`Hittade inga tecken i kategorin "${category}". Har sidans uppbyggnad ändrats?\n${html.slice(0, 2000)}`);
@@ -78,6 +91,10 @@ async function main() {
     const has = (s, w) => [s.word, ...s.synonyms].some((x) => x.toLowerCase() === w.toLowerCase());
     const missing = (topic.preferred ?? []).filter((w) => !chosen.some((s) => has(s, w)));
     console.log(`${topic.name}: ${listed.length} i lexikonet, ${chosen.length} valda${missing.length ? ` (saknas: ${missing.join(', ')})` : ''}`);
+    for (const word of missing) {
+      const context = showContext(topic.category, word);
+      if (context) console.log(`  "${word}" finns i HTML men tolkades inte: ${context}`);
+    }
     topics.push({ id: topic.id, name: topic.name, order });
 
     for (const { id, word, synonyms } of chosen) {
