@@ -50,6 +50,10 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // Firebase-paketen laddas bara på Mina ordlistor.
+    chunkSizeWarningLimit: 700,
+  },
   test: {
     environment: 'jsdom',
   },

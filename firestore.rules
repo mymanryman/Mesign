@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Klistra in de här reglerna i Firebase-konsolen under Firestore > Regler.
+// Bara den inloggade användaren kan läsa och ändra sina egna ordlistor.
+// Bygget läser och uppdaterar listorna med tjänstkontot, som inte omfattas av reglerna.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/wordLists/{listId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.words is list
+        && request.resource.data.words.size() <= 100;
+    }
+  }
+}

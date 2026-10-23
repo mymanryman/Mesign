@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chooseSigns, parseCategoryPage, parseSignPage } from './lexicon.mjs';
+import { chooseSigns, findExactMatch, parseCategoryPage, parseSignPage } from './lexicon.mjs';
 
 const categoryHtml = `
 <table>
@@ -46,5 +46,19 @@ describe('chooseSigns', () => {
   it('hittar önskade ord bland synonymerna', () => {
     const chosen = chooseSigns(parseCategoryPage(categoryHtml), ['mor'], 1);
     expect(chosen.map((s: { id: string }) => s.id)).toEqual(['00188']);
+  });
+});
+
+describe('findExactMatch', () => {
+  const listed = [
+    { id: '1', word: 'hundvalp', synonyms: [] },
+    { id: '2', word: 'hund', synonyms: ['vovve', 'jycke'] },
+  ];
+  it('väljer träffen där ordet eller en synonym stämmer exakt', () => {
+    expect(findExactMatch(listed, 'Hund')?.id).toBe('2');
+    expect(findExactMatch(listed, 'vovve ')?.id).toBe('2');
+  });
+  it('ger null när bara delträffar finns', () => {
+    expect(findExactMatch(listed, 'valp')).toBeNull();
   });
 });

@@ -2,6 +2,8 @@ export type Topic = {
   id: string;
   name: string;
   order: number;
+  /** Satt för egna ordlistor: ämnet visas bara för den här användaren. */
+  ownerUid?: string;
 };
 
 export type Sign = {
