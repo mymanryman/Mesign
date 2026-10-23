@@ -4,10 +4,10 @@ on:
   pull_request:
   push:
     branches: [main]
-  # Letar varje timme efter ordlistor som väntar på tecken. Bygget körs bara om det finns några.
+  # Letar var 10:e minut efter ordlistor som väntar på tecken. Bygget körs bara om det finns några.
   # Ändra även UPDATE_INTERVAL_TEXT i src/lib/wordlists.ts om schemat ändras.
   schedule:
-    - cron: '17 * * * *'
+    - cron: '*/10 * * * *'
   # Kan också startas för hand med "Run workflow".
   workflow_dispatch:
 

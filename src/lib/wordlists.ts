@@ -3,7 +3,7 @@ import type { Catalog } from './types';
 export const MAX_WORDS = 100;
 export const MAX_NAME_LENGTH = 60;
 /** Hur ofta bygget letar efter nya listor. Ska stämma med schemat i .github/workflows/deploy.yml. */
-export const UPDATE_INTERVAL_TEXT = 'inom en timme';
+export const UPDATE_INTERVAL_TEXT = 'inom cirka 10 minuter';
 
 export type WordList = {
   id: string;
