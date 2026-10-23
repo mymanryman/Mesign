@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { CameraMirror } from '../components/CameraMirror';
 import { CatalogGate } from '../components/CatalogGate';
 import { Layout } from '../components/Layout';
-import { SignPlayer } from '../components/SignPlayer';
+import { PreloadVideo, SignPlayer } from '../components/SignPlayer';
 import { checkAnswer, type AnswerResult } from '../lib/answer';
 import { pickSigns, shuffle, type Grade } from '../lib/progress';
 import { signsForTopics, useStore } from '../lib/store';
+import { useSwipe } from '../lib/swipe';
 import type { Catalog, Mode, Sign } from '../lib/types';
 
 type PracticeMode = Exclude<Mode, 'browse'>;
@@ -52,6 +53,7 @@ function Session({ catalog, mode, onRestart }: { catalog: Catalog; mode: Practic
       ) : (
         <RecognizeQuestion key={sign.id} sign={sign} pool={pool} allSigns={catalog.signs} multipleChoice={settings.multipleChoice} onDone={finish} />
       )}
+      {step + 1 < questions.length && <PreloadVideo sign={questions[step + 1]} />}
     </div>
   );
 }
@@ -140,6 +142,11 @@ function RecognizeQuestion({
   const [input, setInput] = useState('');
   const [result, setResult] = useState<AnswerResult | null>(null);
   const choices = useMemo(() => buildChoices(sign, pool, allSigns), [sign, pool, allSigns]);
+  // När svaret är visat går det att svajpa åt vänster till nästa fråga.
+  const swipe = useSwipe({
+    onSwipe: () => result && onDone(GRADE_FOR[result]),
+    canSwipe: (direction) => direction === 'left' && result !== null,
+  });
 
   const submit = (answer: string) => setResult(checkAnswer(answer, sign.word, sign.synonyms));
   const onSubmit = (e: FormEvent) => {
@@ -148,7 +155,7 @@ function RecognizeQuestion({
   };
 
   return (
-    <div className="space-y-4">
+    <div {...swipe.bind} className="space-y-4">
       <SignPlayer sign={sign} />
       {result === null ? (
         multipleChoice ? (

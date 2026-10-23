@@ -74,3 +74,8 @@ export function SignPlayer({ sign, autoPlay = true }: { sign: Sign; autoPlay?: b
     </figure>
   );
 }
+
+/** Laddar nästa tecken i förväg så att det startar direkt efter ett svajp. */
+export function PreloadVideo({ sign }: { sign: Sign }) {
+  return <video src={sign.media.video} preload="auto" muted playsInline className="hidden" aria-hidden="true" />;
+}
