@@ -1,0 +1,53 @@
+{
+  "maxSignsPerTopic": 25,
+  "topics": [
+    {
+      "id": "halsningar",
+      "name": "Hälsningsfraser",
+      "category": "halsningsfras",
+      "preferred": ["hej", "hej då", "tack", "varsågod", "förlåt", "ursäkta", "god morgon", "god natt", "välkommen", "ja", "nej"]
+    },
+    {
+      "id": "familj",
+      "name": "Familj",
+      "category": "familj",
+      "preferred": ["mamma", "pappa", "barn", "bror", "syster", "familj", "son", "dotter", "mormor", "morfar", "farmor", "farfar", "kusin", "föräldrar", "syskon"]
+    },
+    {
+      "id": "siffror",
+      "name": "Siffror",
+      "category": "siffror",
+      "preferred": ["noll", "ett", "två", "tre", "fyra", "fem", "sex", "sju", "åtta", "nio", "tio", "elva", "tolv", "tjugo", "hundra", "tusen"]
+    },
+    {
+      "id": "farger",
+      "name": "Färger",
+      "category": "farger",
+      "preferred": ["röd", "blå", "gul", "grön", "svart", "vit", "grå", "brun", "rosa", "lila", "orange", "färg"]
+    },
+    {
+      "id": "mat",
+      "name": "Mat och dryck",
+      "category": "mat-och-dryck",
+      "preferred": ["mat", "vatten", "mjölk", "bröd", "kaffe", "te", "äpple", "smör", "ost", "kött", "fisk", "potatis", "glass", "frukost", "middag"]
+    },
+    {
+      "id": "djur",
+      "name": "Djur",
+      "category": "djur",
+      "preferred": ["hund", "katt", "häst", "ko", "gris", "får", "fågel", "fisk", "mus", "björn", "kanin", "lejon", "elefant"]
+    },
+    {
+      "id": "kanslor",
+      "name": "Känslor",
+      "category": "kanslor",
+      "preferred": ["glad", "ledsen", "arg", "rädd", "trött", "kär", "nervös", "orolig", "besviken", "lugn", "stolt"]
+    },
+    {
+      "id": "kalender",
+      "name": "Kalender",
+      "category": "kalender",
+      "preferred": ["måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag", "söndag", "dag", "vecka", "månad", "år", "idag", "imorgon", "igår"]
+    }
+  ]
+}
