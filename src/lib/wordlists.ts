@@ -2,8 +2,8 @@ import type { Catalog } from './types';
 
 export const MAX_WORDS = 100;
 export const MAX_NAME_LENGTH = 60;
-/** Sidan i GitHub där bygget startas med "Run workflow". */
-export const UPDATE_URL = 'https://github.com/mymanryman/Mesign/actions/workflows/deploy.yml';
+/** Hur ofta bygget letar efter nya listor. Ska stämma med schemat i .github/workflows/deploy.yml. */
+export const UPDATE_INTERVAL_TEXT = 'inom cirka 10 minuter';
 
 export type WordList = {
   id: string;

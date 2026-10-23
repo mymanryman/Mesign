@@ -9,8 +9,8 @@ Teckenspråksträning på svenska. En PWA som visar tecken från
 
 Progressionen sparas i webbläsaren och ord du missar kommer tillbaka oftare. Man byter tecken genom att svajpa.
 
-Under **Mina ordlistor** kan du logga in med Google och skriva in egna ord. Tryck sedan på **Uppdatera nu**
-och **Run workflow** i GitHub. Bygget slår upp orden med lexikonets sökning, hämtar videorna och deployar.
+Under **Mina ordlistor** kan du logga in med Google och skriva in egna ord. Bygget letar
+var 10:e minut efter listor som väntar och slår upp orden med lexikonets sökning, hämtar videorna och deployar.
 Varje lista blir ett eget ämne som bara du ser.
 
 ## Kom igång
