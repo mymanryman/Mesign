@@ -30,6 +30,8 @@ export default defineConfig({
         // Videor och bilder cachas när de har setts, så att övningar fungerar offline.
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
         navigateFallback: '/index.html',
+        // Firebase Hostings egna sidor, bland annat Google-inloggningen, måste nå servern.
+        navigateFallbackDenylist: [/^\/__\//],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname === '/data/catalog.json',
