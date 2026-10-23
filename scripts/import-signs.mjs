@@ -52,10 +52,14 @@ async function download(url, path) {
 const pageHtml = new Map();
 
 /** Visar var ett saknat ord står i kategorins HTML, så att tolkningen kan felsökas. */
-function showContext(category, word) {
+function showContext(category, word, listed) {
   for (const html of pageHtml.get(category) ?? []) {
-    const at = html.indexOf(`>${word}`);
-    if (at >= 0) return html.slice(Math.max(0, at - 400), at + 200).replace(/\s+/g, ' ');
+    const id = html.match(new RegExp(`/ord/(\\d+)"[^>]*>${word}<`))?.[1];
+    if (!id) continue;
+    const first = html.indexOf(`/ord/${id}`);
+    return `id ${id} tolkades som ${JSON.stringify(listed.find((s) => s.id === id))}; första förekomsten: ${html
+      .slice(Math.max(0, first - 300), first + 500)
+      .replace(/\s+/g, ' ')}`;
   }
   return null;
 }
@@ -90,10 +94,11 @@ async function main() {
     const chosen = chooseSigns(listed, topic.preferred ?? [], config.maxSignsPerTopic);
     const has = (s, w) => [s.word, ...s.synonyms].some((x) => x.toLowerCase() === w.toLowerCase());
     const missing = (topic.preferred ?? []).filter((w) => !chosen.some((s) => has(s, w)));
+    console.log(`  valda: ${chosen.map((s) => s.word).join(', ')}`);
     console.log(`${topic.name}: ${listed.length} i lexikonet, ${chosen.length} valda${missing.length ? ` (saknas: ${missing.join(', ')})` : ''}`);
     for (const word of missing) {
-      const context = showContext(topic.category, word);
-      if (context) console.log(`  "${word}" finns i HTML men tolkades inte: ${context}`);
+      const context = showContext(topic.category, word, listed);
+      if (context) console.log(`  "${word}": ${context}`);
     }
     topics.push({ id: topic.id, name: topic.name, order });
 
