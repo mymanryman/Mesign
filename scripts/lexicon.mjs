@@ -16,17 +16,21 @@ function cleanText(html) {
   return decodeEntities(html.replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
 }
 
-/** Alla tecken på en kategorisida, i den ordning de visas: [{ id, word }]. */
+/**
+ * Alla tecken på en kategorisida, i den ordning de visas: [{ id, word, synonyms }].
+ * Uppslagsordet kan rymma flera ord ("mamma, mor, morsa") och en notis om varianter.
+ */
 export function parseCategoryPage(html) {
   const re = /<a\b[^>]*\bhref=["'](?:https?:\/\/teckensprakslexikon\.su\.se)?\/ord\/(\d+)["'][^>]*>([\s\S]*?)<\/a>/gi;
   const seen = new Set();
   const signs = [];
   for (const [, id, inner] of html.matchAll(re)) {
-    const word = cleanText(inner);
+    const text = cleanText(inner).replace(/\d+\s+varianter?\s+finns/gi, '');
+    const [word, ...synonyms] = text.split(',').map((w) => w.trim()).filter(Boolean);
     // Länkar runt miniatyrbilder saknar text och hoppas över.
     if (!word || seen.has(id)) continue;
     seen.add(id);
-    signs.push({ id, word });
+    signs.push({ id, word, synonyms });
   }
   return signs;
 }
@@ -43,19 +47,21 @@ export function parseSignPage(html) {
   };
 }
 
+const key = (word) => word.toLocaleLowerCase('sv-SE');
+
 /**
  * Väljer tecken för ett ämne: först de önskade orden i den ordning de står, sedan övriga
- * tills taket nås. Finns samma ord flera gånger används den första varianten.
+ * tills taket nås. Ett önskat ord kan också vara en synonym ("mor" hittar "mamma, mor").
+ * Finns samma ord flera gånger används den första varianten.
  */
 export function chooseSigns(listed, preferred, max) {
   const byWord = new Map();
   for (const s of listed) {
-    const key = s.word.toLocaleLowerCase('sv-SE');
-    if (!byWord.has(key)) byWord.set(key, s);
+    if (!byWord.has(key(s.word))) byWord.set(key(s.word), s);
   }
   const chosen = [];
   for (const word of preferred) {
-    const s = byWord.get(word.toLocaleLowerCase('sv-SE'));
+    const s = byWord.get(key(word)) ?? listed.find((l) => (l.synonyms ?? []).some((w) => key(w) === key(word)));
     if (s && !chosen.includes(s)) chosen.push(s);
   }
   for (const s of byWord.values()) {

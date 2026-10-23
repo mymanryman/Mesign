@@ -17,7 +17,10 @@ export function Browse() {
           const sign = signs[i];
           return (
             <div className="space-y-4">
-              <p className="text-center text-3xl font-semibold">{sign.word}</p>
+              <div className="text-center">
+                <p className="text-3xl font-semibold">{sign.word}</p>
+                {sign.synonyms.length > 0 && <p className="text-sm text-slate-500">även {sign.synonyms.join(', ')}</p>}
+              </div>
               <SignPlayer sign={sign} />
               <div className="flex gap-2">
                 <button type="button" disabled={i === 0} onClick={() => setIndex(i - 1)} className="flex-1 rounded-xl bg-white py-3 font-medium disabled:opacity-40 dark:bg-slate-900">

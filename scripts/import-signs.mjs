@@ -75,11 +75,12 @@ async function main() {
   for (const [order, topic] of config.topics.entries()) {
     const listed = await listCategory(topic.category);
     const chosen = chooseSigns(listed, topic.preferred ?? [], config.maxSignsPerTopic);
-    const missing = (topic.preferred ?? []).filter((w) => !chosen.some((s) => s.word.toLowerCase() === w.toLowerCase()));
+    const has = (s, w) => [s.word, ...s.synonyms].some((x) => x.toLowerCase() === w.toLowerCase());
+    const missing = (topic.preferred ?? []).filter((w) => !chosen.some((s) => has(s, w)));
     console.log(`${topic.name}: ${listed.length} i lexikonet, ${chosen.length} valda${missing.length ? ` (saknas: ${missing.join(', ')})` : ''}`);
     topics.push({ id: topic.id, name: topic.name, order });
 
-    for (const { id, word } of chosen) {
+    for (const { id, word, synonyms } of chosen) {
       const existing = signs.get(id);
       if (existing) {
         existing.topicIds.push(topic.id);
@@ -100,7 +101,7 @@ async function main() {
       signs.set(id, {
         id,
         word,
-        synonyms: [],
+        synonyms,
         topicIds: [topic.id],
         media: { video: `/media/signs/${id}.mp4`, ...(poster ? { poster } : {}) },
         sourceUrl,
