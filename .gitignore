@@ -1,0 +1,10 @@
+node_modules
+dist
+# Genereras av importskriptet (npm run import-signs)
+public/data
+public/media
+.import-cache
+.firebase
+*.log
+test-results
+*.tsbuildinfo

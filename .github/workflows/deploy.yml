@@ -1,0 +1,68 @@
+name: Bygg och deploya
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HAS_FIREBASE_SECRET: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MESIGN_E00EB != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # Tecknen hämtas från Svenskt teckenspråkslexikon och sparas i cachen,
+      # så att lexikonet bara anropas när ämneslistan eller importskriptet ändras.
+      - name: Återanvänd hämtade tecken
+        id: signs-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            public/data
+            public/media
+          key: signs-${{ hashFiles('scripts/topics.json', 'scripts/lexicon.mjs', 'scripts/import-signs.mjs') }}
+
+      - name: Hämta tecken från lexikonet
+        if: steps.signs-cache.outputs.cache-hit != 'true'
+        run: npm run import-signs
+
+      - run: npm run build
+
+      - name: Förhandsvisning för pull request
+        if: github.event_name == 'pull_request' && env.HAS_FIREBASE_SECRET == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MESIGN_E00EB }}
+          projectId: mesign-e00eb
+          expires: 7d
+
+      - name: Deploya till produktion
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && env.HAS_FIREBASE_SECRET == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MESIGN_E00EB }}
+          projectId: mesign-e00eb
+          channelId: live
