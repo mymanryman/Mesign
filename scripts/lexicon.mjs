@@ -25,9 +25,10 @@ export function parseCategoryPage(html) {
   const seen = new Set();
   const signs = [];
   for (const [, id, inner] of html.matchAll(re)) {
+    // Länkar runt miniatyrbilder har en bricka med antalet varianter, inte uppslagsordet.
+    if (/<img\b/i.test(inner)) continue;
     const text = cleanText(inner).replace(/\d+\s+varianter?\s+finns/gi, '');
     const [word, ...synonyms] = text.split(',').map((w) => w.trim()).filter(Boolean);
-    // Länkar runt miniatyrbilder saknar text och hoppas över.
     if (!word || seen.has(id)) continue;
     seen.add(id);
     signs.push({ id, word, synonyms });

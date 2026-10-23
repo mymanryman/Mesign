@@ -49,28 +49,11 @@ async function download(url, path) {
   await sleep(DELAY_MS);
 }
 
-const pageHtml = new Map();
-
-/** Visar var ett saknat ord står i kategorins HTML, så att tolkningen kan felsökas. */
-function showContext(category, word, listed) {
-  for (const html of pageHtml.get(category) ?? []) {
-    const id = html.match(new RegExp(`/ord/(\\d+)"[^>]*>${word}<`))?.[1];
-    if (!id) continue;
-    const first = html.indexOf(`/ord/${id}`);
-    return `id ${id} tolkades som ${JSON.stringify(listed.find((s) => s.id === id))}; första förekomsten: ${html
-      .slice(Math.max(0, first - 300), first + 500)
-      .replace(/\s+/g, ' ')}`;
-  }
-  return null;
-}
-
 async function listCategory(category) {
   const all = [];
-  pageHtml.set(category, []);
   const seen = new Set();
   for (let page = 1; page <= MAX_PAGES; page++) {
     const html = await fetchText(`${LEXICON_ORIGIN}/kategori/${category}?page=${page}`);
-    pageHtml.get(category).push(html);
     const fresh = parseCategoryPage(html).filter((s) => !seen.has(s.id));
     if (fresh.length === 0) {
       if (page === 1) throw new Error(`Hittade inga tecken i kategorin "${category}". Har sidans uppbyggnad ändrats?\n${html.slice(0, 2000)}`);
@@ -94,12 +77,7 @@ async function main() {
     const chosen = chooseSigns(listed, topic.preferred ?? [], config.maxSignsPerTopic);
     const has = (s, w) => [s.word, ...s.synonyms].some((x) => x.toLowerCase() === w.toLowerCase());
     const missing = (topic.preferred ?? []).filter((w) => !chosen.some((s) => has(s, w)));
-    console.log(`  valda: ${chosen.map((s) => s.word).join(', ')}`);
     console.log(`${topic.name}: ${listed.length} i lexikonet, ${chosen.length} valda${missing.length ? ` (saknas: ${missing.join(', ')})` : ''}`);
-    for (const word of missing) {
-      const context = showContext(topic.category, word, listed);
-      if (context) console.log(`  "${word}": ${context}`);
-    }
     topics.push({ id: topic.id, name: topic.name, order });
 
     for (const { id, word, synonyms } of chosen) {

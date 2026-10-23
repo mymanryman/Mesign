@@ -3,7 +3,7 @@ import { chooseSigns, parseCategoryPage, parseSignPage } from './lexicon.mjs';
 
 const categoryHtml = `
 <table>
-  <tr><td><a href="/ord/00257"><img src="/photos/00/barn-00257-photo-1-small.jpg"></a></td>
+  <tr><td><a href="/ord/00257"><div class="badge"> 1</div><img src="/photos/00/barn-00257-photo-1-small.jpg"></a></td>
       <td><a href="https://teckensprakslexikon.su.se/ord/00257">barn <span>1 varianter finns</span></a></td>
       <td><a href="/kategori/familj">Familj</a></td><td>549</td></tr>
   <tr><td><a href="/ord/00111">dotter</a></td></tr>
@@ -14,7 +14,7 @@ const categoryHtml = `
 </table>`;
 
 describe('parseCategoryPage', () => {
-  it('hittar tecknen och hoppar över bildlänkar och dubbletter', () => {
+  it('hittar tecknen och hoppar över bildlänkar med variantbricka och dubbletter', () => {
     expect(parseCategoryPage(categoryHtml)).toEqual([
       { id: '00257', word: 'barn', synonyms: [] },
       { id: '00111', word: 'dotter', synonyms: [] },
